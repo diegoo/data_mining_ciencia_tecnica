@@ -1,0 +1,97 @@
+---
+title: Data Mining en Ciencia y Técnica - TP1
+author: grupo _
+output: pdf_document
+---
+
+TP1
+===
+
+Cargamos el dataset:
+
+```{r, results='markup'}
+glx <- read.csv("COMBO17.csv", header = T, stringsAsFactors = F)
+```
+
+# Tarea 1
+
+str(glx) -> problema: la variable e.W420FE es de tipo 'chr'. La convertimos a numérica:
+
+```{r, results='markup'}
+glx$e.W420FE <- as.numeric(glx$e.W420FE)
+```
+
+# Tarea 2
+
+(Esta no sé; mirando gráficos no veo outliers tan evidentes como en la variable de ejemplo)
+
+```{r, results='markup', fig.width = 12, fig.height = 6}
+library(ggplot2)
+library(gridExtra)
+
+p1 <- qplot(BjMAG, S280MAG-BjMAG, data = glx)
+p2 <- qplot(BbMAG, S280MAG-BbMAG, data = glx)
+p3 <- qplot(UjMAG, S280MAG-UjMAG, data = glx)
+p4 <- qplot(UbMAG, S280MAG-UbMAG, data = glx)
+p5 <- qplot(VjMAG, S280MAG-VjMAG, data = glx)
+p6 <- qplot(VnMAG, S280MAG-VnMAG, data = glx)
+p7 <- qplot(usMAG, S280MAG-usMAG, data = glx)
+p8 <- qplot(gsMAG, S280MAG-gsMAG, data = glx)
+p9 <- qplot(rsMAG, S280MAG-rsMAG, data = glx)
+grid.arrange(p1, p2, p3, p4, p5, p6, p7, p8, p9, ncol=2, nrow=5)
+```
+
+```{r, results='markup', fig.width = 12, fig.height = 6}
+h1 <- qplot(BjMAG, data = glx)
+h2 <- qplot(BbMAG, data = glx)
+h3 <- qplot(UjMAG, data = glx)
+h4 <- qplot(UbMAG, data = glx)
+h5 <- qplot(VjMAG, data = glx)
+h6 <- qplot(VnMAG, data = glx)
+h7 <- qplot(usMAG, data = glx)
+h8 <- qplot(gsMAG, data = glx)
+h9 <- qplot(rsMAG, data = glx)
+grid.arrange(h1, h2, h3, h4, h5, h6, h7, h8, h9, ncol=3, nrow=3)
+```
+
+```{r, results='markup', fig.width = 12, fig.height = 6}
+b1 <- qplot(factor(0), BjMAG, geom = "boxplot", xlab="", data=glx)
+b2 <- qplot(factor(0), BbMAG, geom = "boxplot", xlab="", data=glx)
+b3 <- qplot(factor(0), UjMAG, geom = "boxplot", xlab="", data=glx)
+b4 <- qplot(factor(0), UbMAG, geom = "boxplot", xlab="", data=glx)
+b5 <- qplot(factor(0), VjMAG, geom = "boxplot", xlab="", data=glx)
+b6 <- qplot(factor(0), VnMAG, geom = "boxplot", xlab="", data=glx)
+b7 <- qplot(factor(0), usMAG, geom = "boxplot", xlab="", data=glx)
+b8 <- qplot(factor(0), gsMAG, geom = "boxplot", xlab="", data=glx)
+b9 <- qplot(factor(0), rsMAG, geom = "boxplot", xlab="", data=glx)
+b10 <- qplot(factor(0), ApDRmag, geom = "boxplot", xlab="", data=glx)
+grid.arrange(b1, b2, b3, b4, b5, b6, b7, b8, b9, b10, ncol=4, nrow=3)
+```
+
+# Tarea 3
+
+Miramos si alguna variable (i.e., columna) tiene valores faltante:
+
+```{r, results='markup'}
+apply(glx, 2, function(x) anyNA(x))
+```
+
+De las variables de interés, hay 2 con datos faltantes: *VnMAG*, *S280MAG*
+
+```{r, results='markup'}
+faltantes_VnMAG <- which(is.na(glx$VnMAG))
+faltantes_S280MAG <- which(is.na(glx$S280MAG))
+faltantes_VnMAG
+faltantes_S280MAG
+```
+
+Son 24 registros en total. Los borramos:
+
+```{r, results='markup'}
+glx_sin_faltantes <- glx[complete.cases(glx[,c(26, 28)]),]
+dim(glx)[1] - 24 == dim(glx_sin_faltantes)[1]
+```
+
+# Tarea 4
+
+(no empecé)
