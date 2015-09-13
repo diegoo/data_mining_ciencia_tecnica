@@ -144,7 +144,9 @@ grid.arrange(b1, b2, b3, b4, b5, b6, b7, b8, b9, b10, ncol=4, nrow=3)
 
 ![plot of chunk unnamed-chunk-5](figure/unnamed-chunk-5-1.png) 
 
-Pero quitaríamos demasiados puntos con ese criterio... Mejor quitamos sólo los que son claramente outliers, en las variables *ApRDmag* y de *BjMAG*:
+Pero hay bastante densidad de puntos más allá de los bigotes...
+
+Mejor quitamos sólo los que son claramente outliers, en las variables *ApRDmag* y de *BjMAG*:
 
 
 ```r
@@ -168,6 +170,37 @@ dim(glx)
 ## [1] 3460   65
 ```
 
+Y luego quitamos, para el resto de las variables de interés (*BbMAG*, *UjMAG*, *UbMAG*, *VjMAG*, *VnMAG*, *usMAG*, *gsMAG*, *rsMAG*), los puntos que se alejan demasiado por encima:
+
+
+```r
+# antes de quitar outliers
+dim(glx)
+```
+
+```
+## [1] 3460   65
+```
+
+```r
+glx <- subset(glx, BbMAG < -9.0)
+glx <- subset(glx, UjMAG < -10.0)
+glx <- subset(glx, UbMAG < -10.0)
+glx <- subset(glx, VjMAG < -10.0)
+glx <- subset(glx, VnMAG < -10.0)
+glx <- subset(glx, usMAG < -10.0)
+glx <- subset(glx, gsMAG < -9.0)
+glx <- subset(glx, rsMAG < -9.0)
+
+# después
+dim(glx)
+```
+
+```
+## [1] 3450   65
+```
+
+
 # Tarea 3
 
 Miramos si alguna variable tiene valores faltantes:
@@ -185,7 +218,7 @@ apply(glx, 2, function(x) anyNA(x))
 ##  e.usMAG    gsMAG  e.gsMAG    rsMAG  e.rsMAG    UbMAG  e.UbMAG    BbMAG 
 ##    FALSE    FALSE    FALSE    FALSE    FALSE    FALSE    FALSE    FALSE 
 ##  e.BbMAG    VnMAG  e.VbMAG  S280MAG e.S280MA   W420FE e.W420FE   W462FE 
-##    FALSE     TRUE     TRUE     TRUE     TRUE    FALSE     TRUE    FALSE 
+##    FALSE    FALSE    FALSE     TRUE     TRUE    FALSE     TRUE    FALSE 
 ## e.W462FE   W485FD e.W485FD   W518FE e.W518FE   W571FS e.W571FS   W604FE 
 ##    FALSE    FALSE    FALSE    FALSE    FALSE    FALSE    FALSE    FALSE 
 ## e.W604FE   W646FD e.W646FD   W696FE e.W696FE   W753FE e.W753FE   W815FS 
@@ -208,7 +241,7 @@ faltantes_VnMAG
 ```
 
 ```
-## [1] 3444
+## integer(0)
 ```
 
 ```r
@@ -216,8 +249,8 @@ faltantes_S280MAG
 ```
 
 ```
-##  [1]   22   40   89  159  363  385  415  492  576  969 1023 1426 1455 1529
-## [15] 1530 1556 2264 2510 2815 2885 2889 2935 3422 3444
+##  [1]   22   40   89  157  360  382  412  489  573  964 1018 1420 1449 1523
+## [15] 1524 1550 2255 2501 2806 2876 2880 2926 3413
 ```
 
 También hay valores faltantes en las variables de error asociadas, en los mismos registros:
@@ -230,7 +263,7 @@ faltantes_e.VbMAG
 ```
 
 ```
-## [1] 3444
+## integer(0)
 ```
 
 ```r
@@ -238,16 +271,16 @@ faltantes_e.280MA
 ```
 
 ```
-##  [1]   22   40   89  159  363  385  415  492  576  969 1023 1426 1455 1529
-## [15] 1530 1556 2264 2510 2815 2885 2889 2935 3422 3444
+##  [1]   22   40   89  157  360  382  412  489  573  964 1018 1420 1449 1523
+## [15] 1524 1550 2255 2501 2806 2876 2880 2926 3413
 ```
 
-Son 24 registros en total. Los borramos:
+Son 23 registros en total. Los borramos:
 
 
 ```r
 glx_sin_faltantes <- glx[complete.cases(glx[,26:29]),]
-dim(glx)[1] - 24 == dim(glx_sin_faltantes)[1]
+dim(glx)[1] - 23 == dim(glx_sin_faltantes)[1]
 ```
 
 ```
@@ -281,7 +314,7 @@ correlaciones <- cor(variables_de_magnitud_absoluta_en_reposo)
 corrplot.mixed(correlaciones, lower="circle", upper="number")
 ```
 
-![plot of chunk unnamed-chunk-12](figure/unnamed-chunk-12-1.png) 
+![plot of chunk unnamed-chunk-13](figure/unnamed-chunk-13-1.png) 
 
 A cada magnitud le restamos la magnitud a 280 nm:
 
@@ -308,4 +341,4 @@ correlaciones_de_normalizadas <- cor(variables_de_magnitud_absoluta_en_reposo_no
 corrplot.mixed(correlaciones_de_normalizadas, lower="circle", upper="number")
 ```
 
-![plot of chunk unnamed-chunk-14](figure/unnamed-chunk-14-1.png) 
+![plot of chunk unnamed-chunk-15](figure/unnamed-chunk-15-1.png) 

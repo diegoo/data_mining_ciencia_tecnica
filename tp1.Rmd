@@ -66,7 +66,9 @@ b10 <- qplot(factor(0), ApDRmag, geom = "boxplot", xlab="", data=glx) + geom_hli
 grid.arrange(b1, b2, b3, b4, b5, b6, b7, b8, b9, b10, ncol=4, nrow=3)
 ```
 
-Pero quitaríamos demasiados puntos con ese criterio... Mejor quitamos sólo los que son claramente outliers, en las variables *ApRDmag* y de *BjMAG*:
+Pero hay bastante densidad de puntos más allá de los bigotes...
+
+Mejor quitamos sólo los que son claramente outliers, en las variables *ApRDmag* y de *BjMAG*:
 
 ```{r, results='markup', warning=FALSE, message=FALSE}
 # antes de quitar outliers
@@ -79,6 +81,26 @@ glx <- subset(glx, BjMAG < -7.0)
 dim(glx)
 ```
 
+Y luego quitamos, para el resto de las variables de interés (*BbMAG*, *UjMAG*, *UbMAG*, *VjMAG*, *VnMAG*, *usMAG*, *gsMAG*, *rsMAG*), los puntos que se alejan demasiado por encima:
+
+```{r, results='markup', warning=FALSE, message=FALSE}
+# antes de quitar outliers
+dim(glx)
+
+glx <- subset(glx, BbMAG < -9.0)
+glx <- subset(glx, UjMAG < -10.0)
+glx <- subset(glx, UbMAG < -10.0)
+glx <- subset(glx, VjMAG < -10.0)
+glx <- subset(glx, VnMAG < -10.0)
+glx <- subset(glx, usMAG < -10.0)
+glx <- subset(glx, gsMAG < -9.0)
+glx <- subset(glx, rsMAG < -9.0)
+
+# después
+dim(glx)
+```
+
+
 # Tarea 3
 
 Miramos si alguna variable tiene valores faltantes:
@@ -87,7 +109,7 @@ Miramos si alguna variable tiene valores faltantes:
 apply(glx, 2, function(x) anyNA(x))
 ```
 
-De las variables de interés, hay 2 con datos faltantes: *VnMAG*, *S280MAG*
+De las variables de interés, hay 2 con datos faltantes: *VnMAG* (originalmente, antes de quitar outliers) y *S280MAG*
 
 ```{r, results='markup', warning=FALSE, message=FALSE}
 faltantes_VnMAG <- which(is.na(glx$VnMAG))
@@ -105,11 +127,11 @@ faltantes_e.VbMAG
 faltantes_e.280MA
 ```
 
-Son 24 registros en total. Los borramos:
+Son 23 registros en total. Los borramos:
 
 ```{r, results='markup', warning=FALSE, message=FALSE}
 glx_sin_faltantes <- glx[complete.cases(glx[,26:29]),]
-dim(glx)[1] - 24 == dim(glx_sin_faltantes)[1]
+dim(glx)[1] - 23 == dim(glx_sin_faltantes)[1]
 ```
 
 # Tarea 4
