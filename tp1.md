@@ -1,6 +1,6 @@
 ---
 title: Data Mining en Ciencia y Técnica - TP1
-author: grupo _
+author: Ariel Aguirre, Miguel Barros, José Badillo, Diego Dell'Era
 output: pdf_document
 ---
 
