@@ -15,7 +15,13 @@ glx <- read.csv("COMBO17.csv", header = T, stringsAsFactors = F)
 
 # Tarea 1
 
-str(glx) -> problema: la variable e.W420FE es de tipo 'chr'. La convertimos a numérica:
+Miramos el tipo de cada variable:
+
+```{r, results='markup', warning=FALSE, message=FALSE}
+str(glx)
+```
+
+El problema es que la variable *e.W420FE* es de tipo 'chr'. La convertimos a numérica:
 
 ```{r, results='markup', warning=FALSE, message=FALSE}
 glx$e.W420FE <- as.numeric(glx$e.W420FE)
@@ -75,7 +81,7 @@ dim(glx)
 
 # Tarea 3
 
-Miramos si alguna variable (i.e., columna) tiene valores faltante:
+Miramos si alguna variable tiene valores faltantes:
 
 ```{r, results='markup', warning=FALSE, message=FALSE}
 apply(glx, 2, function(x) anyNA(x))
@@ -90,7 +96,7 @@ faltantes_VnMAG
 faltantes_S280MAG
 ```
 
-También hay valores faltantes en las variables asociadas de error, en los mismos registros:
+También hay valores faltantes en las variables de error asociadas, en los mismos registros:
 
 ```{r, results='markup', warning=FALSE, message=FALSE}
 faltantes_e.VbMAG <- which(is.na(glx$e.VbMAG))
