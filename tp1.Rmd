@@ -90,10 +90,19 @@ faltantes_VnMAG
 faltantes_S280MAG
 ```
 
+También hay valores faltantes en las variables asociadas de error, en los mismos registros:
+
+```{r, results='markup', warning=FALSE, message=FALSE}
+faltantes_e.VbMAG <- which(is.na(glx$e.VbMAG))
+faltantes_e.280MA <- which(is.na(glx$e.S280MA))
+faltantes_e.VbMAG
+faltantes_e.280MA
+```
+
 Son 24 registros en total. Los borramos:
 
 ```{r, results='markup', warning=FALSE, message=FALSE}
-glx_sin_faltantes <- glx[complete.cases(glx[,c(26, 28)]),]
+glx_sin_faltantes <- glx[complete.cases(glx[,26:29]),]
 dim(glx)[1] - 24 == dim(glx_sin_faltantes)[1]
 ```
 

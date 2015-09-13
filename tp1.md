@@ -144,11 +144,33 @@ faltantes_S280MAG
 ## [15] 1530 1556 2264 2510 2815 2885 2889 2935 3422 3444
 ```
 
+También hay valores faltantes en las variables asociadas de error, en los mismos registros:
+
+
+```r
+faltantes_e.VbMAG <- which(is.na(glx$e.VbMAG))
+faltantes_e.280MA <- which(is.na(glx$e.S280MA))
+faltantes_e.VbMAG
+```
+
+```
+## [1] 3444
+```
+
+```r
+faltantes_e.280MA
+```
+
+```
+##  [1]   22   40   89  159  363  385  415  492  576  969 1023 1426 1455 1529
+## [15] 1530 1556 2264 2510 2815 2885 2889 2935 3422 3444
+```
+
 Son 24 registros en total. Los borramos:
 
 
 ```r
-glx_sin_faltantes <- glx[complete.cases(glx[,c(26, 28)]),]
+glx_sin_faltantes <- glx[complete.cases(glx[,26:29]),]
 dim(glx)[1] - 24 == dim(glx_sin_faltantes)[1]
 ```
 
@@ -183,7 +205,7 @@ correlaciones <- cor(variables_de_magnitud_absoluta_en_reposo)
 corrplot.mixed(correlaciones, lower="circle", upper="number")
 ```
 
-![plot of chunk unnamed-chunk-10](figure/unnamed-chunk-10-1.png) 
+![plot of chunk unnamed-chunk-11](figure/unnamed-chunk-11-1.png) 
 
 A cada magnitud le restamos la magnitud a 280 nm:
 
@@ -210,4 +232,4 @@ correlaciones_de_normalizadas <- cor(variables_de_magnitud_absoluta_en_reposo_no
 corrplot.mixed(correlaciones_de_normalizadas, lower="circle", upper="number")
 ```
 
-![plot of chunk unnamed-chunk-12](figure/unnamed-chunk-12-1.png) 
+![plot of chunk unnamed-chunk-13](figure/unnamed-chunk-13-1.png) 
