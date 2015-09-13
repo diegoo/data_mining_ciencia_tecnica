@@ -9,7 +9,7 @@ TP1
 
 Cargamos el dataset:
 
-```{r, results='markup'}
+```{r, results='markup', warning=FALSE, message=FALSE}
 glx <- read.csv("COMBO17.csv", header = T, stringsAsFactors = F)
 ```
 
@@ -17,7 +17,7 @@ glx <- read.csv("COMBO17.csv", header = T, stringsAsFactors = F)
 
 str(glx) -> problema: la variable e.W420FE es de tipo 'chr'. La convertimos a numérica:
 
-```{r, results='markup'}
+```{r, results='markup', warning=FALSE, message=FALSE}
 glx$e.W420FE <- as.numeric(glx$e.W420FE)
 ```
 
@@ -25,7 +25,7 @@ glx$e.W420FE <- as.numeric(glx$e.W420FE)
 
 (Esta no sé; mirando gráficos no veo outliers tan evidentes como en la variable de ejemplo)
 
-```{r, results='markup', fig.width = 12, fig.height = 6}
+```{r, results='markup', fig.width = 12, fig.height = 6, warning=FALSE, message=FALSE}
 library(ggplot2)
 library(gridExtra)
 
@@ -41,7 +41,7 @@ p9 <- qplot(rsMAG, S280MAG-rsMAG, data = glx)
 grid.arrange(p1, p2, p3, p4, p5, p6, p7, p8, p9, ncol=2, nrow=5)
 ```
 
-```{r, results='markup', fig.width = 12, fig.height = 6}
+```{r, results='markup', fig.width = 12, fig.height = 6, warning=FALSE, message=FALSE}
 h1 <- qplot(BjMAG, data = glx)
 h2 <- qplot(BbMAG, data = glx)
 h3 <- qplot(UjMAG, data = glx)
@@ -54,7 +54,7 @@ h9 <- qplot(rsMAG, data = glx)
 grid.arrange(h1, h2, h3, h4, h5, h6, h7, h8, h9, ncol=3, nrow=3)
 ```
 
-```{r, results='markup', fig.width = 12, fig.height = 6}
+```{r, results='markup', fig.width = 12, fig.height = 6, warning=FALSE, message=FALSE}
 b1 <- qplot(factor(0), BjMAG, geom = "boxplot", xlab="", data=glx)
 b2 <- qplot(factor(0), BbMAG, geom = "boxplot", xlab="", data=glx)
 b3 <- qplot(factor(0), UjMAG, geom = "boxplot", xlab="", data=glx)
@@ -72,13 +72,13 @@ grid.arrange(b1, b2, b3, b4, b5, b6, b7, b8, b9, b10, ncol=4, nrow=3)
 
 Miramos si alguna variable (i.e., columna) tiene valores faltante:
 
-```{r, results='markup'}
+```{r, results='markup', warning=FALSE, message=FALSE}
 apply(glx, 2, function(x) anyNA(x))
 ```
 
 De las variables de interés, hay 2 con datos faltantes: *VnMAG*, *S280MAG*
 
-```{r, results='markup'}
+```{r, results='markup', warning=FALSE, message=FALSE}
 faltantes_VnMAG <- which(is.na(glx$VnMAG))
 faltantes_S280MAG <- which(is.na(glx$S280MAG))
 faltantes_VnMAG
@@ -87,11 +87,35 @@ faltantes_S280MAG
 
 Son 24 registros en total. Los borramos:
 
-```{r, results='markup'}
+```{r, results='markup', warning=FALSE, message=FALSE}
 glx_sin_faltantes <- glx[complete.cases(glx[,c(26, 28)]),]
 dim(glx)[1] - 24 == dim(glx_sin_faltantes)[1]
 ```
 
 # Tarea 4
 
-(no empecé)
+```{r, results='markup', warning=FALSE, message=FALSE}
+espectrales <- c(10,12,14,16,18,20,22,24,26,28)
+variables_de_magnitud_absoluta_en_reposo <- glx_sin_faltantes[, espectrales]
+head(variables_de_magnitud_absoluta_en_reposo)
+```
+
+```{r, results='markup', fig.width = 12, fig.height = 12, warning=FALSE, message=FALSE}
+library(corrplot)
+correlaciones <- cor(variables_de_magnitud_absoluta_en_reposo)
+corrplot(correlaciones, method="circle", type="lower")
+corrplot.mixed(correlaciones, lower="ellipse", upper="number")
+```
+
+A cada magnitud le restamos la magnitud a 280 nm:
+
+```{r, results='markup', warning=FALSE, message=FALSE}
+variables_de_magnitud_absoluta_en_reposo_normalizadas <- sweep(variables_de_magnitud_absoluta_en_reposo[,1:9], 1, variables_de_magnitud_absoluta_en_reposo$S280MAG, `-`)
+head(variables_de_magnitud_absoluta_en_reposo_normalizadas)
+```
+
+```{r, results='markup', fig.width = 12, fig.height = 12, warning=FALSE, message=FALSE}
+correlaciones_de_normalizadas <- cor(variables_de_magnitud_absoluta_en_reposo_normalizadas)
+corrplot(correlaciones_de_normalizadas, method="circle", type="lower")
+corrplot.mixed(correlaciones_de_normalizadas, lower="ellipse", upper="number")
+```
