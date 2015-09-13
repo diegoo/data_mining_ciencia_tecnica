@@ -23,8 +23,6 @@ glx$e.W420FE <- as.numeric(glx$e.W420FE)
 
 # Tarea 2
 
-(Esta no sé; mirando gráficos no veo outliers tan evidentes como en la variable de ejemplo)
-
 ```{r, results='markup', fig.width = 12, fig.height = 6, warning=FALSE, message=FALSE}
 library(ggplot2)
 library(gridExtra)
@@ -41,31 +39,38 @@ p9 <- qplot(rsMAG, S280MAG-rsMAG, data = glx)
 grid.arrange(p1, p2, p3, p4, p5, p6, p7, p8, p9, ncol=2, nrow=5)
 ```
 
-```{r, results='markup', fig.width = 12, fig.height = 6, warning=FALSE, message=FALSE}
-h1 <- qplot(BjMAG, data = glx)
-h2 <- qplot(BbMAG, data = glx)
-h3 <- qplot(UjMAG, data = glx)
-h4 <- qplot(UbMAG, data = glx)
-h5 <- qplot(VjMAG, data = glx)
-h6 <- qplot(VnMAG, data = glx)
-h7 <- qplot(usMAG, data = glx)
-h8 <- qplot(gsMAG, data = glx)
-h9 <- qplot(rsMAG, data = glx)
-grid.arrange(h1, h2, h3, h4, h5, h6, h7, h8, h9, ncol=3, nrow=3)
-```
+Para separar outliers, podemos empezar por mirar el criterio de los bigotes (i.e. definir un par de barras, arriba y abajo, a 1.5 * distancia intercuartil desde la caja), y quitar los que excedan esos límites:
 
 ```{r, results='markup', fig.width = 12, fig.height = 6, warning=FALSE, message=FALSE}
-b1 <- qplot(factor(0), BjMAG, geom = "boxplot", xlab="", data=glx)
-b2 <- qplot(factor(0), BbMAG, geom = "boxplot", xlab="", data=glx)
-b3 <- qplot(factor(0), UjMAG, geom = "boxplot", xlab="", data=glx)
-b4 <- qplot(factor(0), UbMAG, geom = "boxplot", xlab="", data=glx)
-b5 <- qplot(factor(0), VjMAG, geom = "boxplot", xlab="", data=glx)
-b6 <- qplot(factor(0), VnMAG, geom = "boxplot", xlab="", data=glx)
-b7 <- qplot(factor(0), usMAG, geom = "boxplot", xlab="", data=glx)
-b8 <- qplot(factor(0), gsMAG, geom = "boxplot", xlab="", data=glx)
-b9 <- qplot(factor(0), rsMAG, geom = "boxplot", xlab="", data=glx)
-b10 <- qplot(factor(0), ApDRmag, geom = "boxplot", xlab="", data=glx)
+limite_inferior_boxplot <- function(magnitud) { q <- quantile(magnitud, na.rm=TRUE); return (q[2] - (q[4] - q[2]) * 1.5) }
+limite_superior_boxplot <- function(magnitud) { q <- quantile(magnitud, na.rm=TRUE); return (q[4] + (q[4] - q[2]) * 1.5) }
+
+nros_ejes <- scale_y_continuous(breaks = round(seq(-30, -5, by = 0.5), 1))
+
+b1 <-  qplot(factor(0), BjMAG,   geom = "boxplot", xlab="", data=glx) + geom_hline(yintercept=limite_inferior_boxplot(glx$BjMAG))   + geom_hline(yintercept=limite_superior_boxplot(glx$BjMAG)) + nros_ejes
+b2 <-  qplot(factor(0), BbMAG,   geom = "boxplot", xlab="", data=glx) + geom_hline(yintercept=limite_inferior_boxplot(glx$BbMAG))   + geom_hline(yintercept=limite_superior_boxplot(glx$BbMAG)) + nros_ejes
+b3 <-  qplot(factor(0), UjMAG,   geom = "boxplot", xlab="", data=glx) + geom_hline(yintercept=limite_inferior_boxplot(glx$UjMAG))   + geom_hline(yintercept=limite_superior_boxplot(glx$UjMAG)) + nros_ejes
+b4 <-  qplot(factor(0), UbMAG,   geom = "boxplot", xlab="", data=glx) + geom_hline(yintercept=limite_inferior_boxplot(glx$UbMAG))   + geom_hline(yintercept=limite_superior_boxplot(glx$UbMAG)) + nros_ejes
+b5 <-  qplot(factor(0), VjMAG,   geom = "boxplot", xlab="", data=glx) + geom_hline(yintercept=limite_inferior_boxplot(glx$VjMAG))   + geom_hline(yintercept=limite_superior_boxplot(glx$VjMAG)) + nros_ejes
+b6 <-  qplot(factor(0), VnMAG,   geom = "boxplot", xlab="", data=glx) + geom_hline(yintercept=limite_inferior_boxplot(glx$VnMAG))   + geom_hline(yintercept=limite_superior_boxplot(glx$VnMAG)) + nros_ejes
+b7 <-  qplot(factor(0), usMAG,   geom = "boxplot", xlab="", data=glx) + geom_hline(yintercept=limite_inferior_boxplot(glx$usMAG))   + geom_hline(yintercept=limite_superior_boxplot(glx$usMAG)) + nros_ejes
+b8 <-  qplot(factor(0), gsMAG,   geom = "boxplot", xlab="", data=glx) + geom_hline(yintercept=limite_inferior_boxplot(glx$gsMAG))   + geom_hline(yintercept=limite_superior_boxplot(glx$gsMAG)) + nros_ejes
+b9 <-  qplot(factor(0), rsMAG,   geom = "boxplot", xlab="", data=glx) + geom_hline(yintercept=limite_inferior_boxplot(glx$rsMAG))   + geom_hline(yintercept=limite_superior_boxplot(glx$rsMAG)) + nros_ejes
+b10 <- qplot(factor(0), ApDRmag, geom = "boxplot", xlab="", data=glx) + geom_hline(yintercept=limite_inferior_boxplot(glx$ApDRmag)) + geom_hline(yintercept=limite_superior_boxplot(glx$ApDRmag)) + scale_y_continuous(breaks = round(seq(min(glx$ApDRmag), max(glx$ApDRmag), by = 0.5), 1))
 grid.arrange(b1, b2, b3, b4, b5, b6, b7, b8, b9, b10, ncol=4, nrow=3)
+```
+
+Pero quitaríamos demasiados puntos con ese criterio... Mejor quitamos sólo los que son claramente outliers, en las variables *ApRDmag* y de *BjMAG*:
+
+```{r, results='markup', warning=FALSE, message=FALSE}
+# antes de quitar outliers
+dim(glx)
+
+glx <- subset(glx, ApDRmag > -3.2)
+glx <- subset(glx, BjMAG < -7.0)
+
+# después
+dim(glx)
 ```
 
 # Tarea 3
@@ -100,11 +105,11 @@ variables_de_magnitud_absoluta_en_reposo <- glx_sin_faltantes[, espectrales]
 head(variables_de_magnitud_absoluta_en_reposo)
 ```
 
-```{r, results='markup', fig.width = 12, fig.height = 12, warning=FALSE, message=FALSE}
+```{r, results='markup', fig.width = 9, fig.height = 9, warning=FALSE, message=FALSE}
 library(corrplot)
 correlaciones <- cor(variables_de_magnitud_absoluta_en_reposo)
-corrplot(correlaciones, method="circle", type="lower")
-corrplot.mixed(correlaciones, lower="ellipse", upper="number")
+# corrplot(correlaciones, method="circle", type="lower")
+corrplot.mixed(correlaciones, lower="circle", upper="number")
 ```
 
 A cada magnitud le restamos la magnitud a 280 nm:
@@ -114,8 +119,8 @@ variables_de_magnitud_absoluta_en_reposo_normalizadas <- sweep(variables_de_magn
 head(variables_de_magnitud_absoluta_en_reposo_normalizadas)
 ```
 
-```{r, results='markup', fig.width = 12, fig.height = 12, warning=FALSE, message=FALSE}
+```{r, results='markup', fig.width = 9, fig.height = 9, warning=FALSE, message=FALSE}
 correlaciones_de_normalizadas <- cor(variables_de_magnitud_absoluta_en_reposo_normalizadas)
-corrplot(correlaciones_de_normalizadas, method="circle", type="lower")
-corrplot.mixed(correlaciones_de_normalizadas, lower="ellipse", upper="number")
+# corrplot(correlaciones_de_normalizadas, method="circle", type="lower")
+corrplot.mixed(correlaciones_de_normalizadas, lower="circle", upper="number")
 ```
