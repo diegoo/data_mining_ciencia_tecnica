@@ -36,19 +36,13 @@ nrow(glx2)
 faltantes <- apply(glx, 2, function(x) anyNA(x))
 faltantes <- data.frame(faltantes)
 faltantes <- data.frame(names(glx), faltantes[,1])
-faltantes.list<- which(faltantes[,2] == TRUE]
-
-
+faltantes.list<- which(faltantes[,2] == TRUE)
 faltantes.rows <- matrix(, nrow = 0, ncol = 1)
-for (i in 1:length(faltantes.list) )
-{
-	faltantes.rows <- rbind(faltantes.rows, as.matrix(which(is.na(glx2[,faltantes.list[2]]))))
+for (i in 1:length(faltantes.list) ) {
+  faltantes.rows <- rbind(faltantes.rows, as.matrix(which(is.na(glx2[,faltantes.list[2]]))))
 }
 
 faltantes.rows <- unique(faltantes.rows)
-
-
 glx3 <- glx2[-faltantes.rows,]
-
 which(is.na(glx2[,faltantes.list[i]]))
 

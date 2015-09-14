@@ -120,7 +120,20 @@ grid.arrange(p1, p2, p3, p4, p5, p6, p7, p8, p9, ncol=2, nrow=5)
 
 ![plot of chunk unnamed-chunk-4](figure/unnamed-chunk-4-1.png) 
 
-Para separar outliers, podemos empezar por mirar el criterio de los bigotes (i.e. definir un par de barras, arriba y abajo, a 1.5 * distancia intercuartil desde la caja), y quitar los que excedan esos límites:
+Para separar outliers, podemos empezar por mirar el criterio de las desviaciones estándar: los puntos más allá de 3 se consideran outliers:
+
+```r
+glx2 <- glx[!apply(sapply(glx[,-1], function(x) { abs(scale(x)) >= 3 }), 1, any), ]
+
+# porcentaje de outliers que quitamos
+(nrow(glx) - nrow(glx2)) / nrow(glx) * 100
+```
+
+```
+## [1] 16.52224
+```
+
+Eliminaríamos un 16.5% de los registros; un poco mucho. Otra posibilidad es usar el criterio de los bigotes (i.e. definir un par de barras, arriba y abajo, a 1.5 * distancia intercuartil desde la caja), y quitar los que excedan esos límites:
 
 
 ```r
@@ -142,7 +155,7 @@ b10 <- qplot(factor(0), ApDRmag, geom = "boxplot", xlab="", data=glx) + geom_hli
 grid.arrange(b1, b2, b3, b4, b5, b6, b7, b8, b9, b10, ncol=4, nrow=3)
 ```
 
-![plot of chunk unnamed-chunk-5](figure/unnamed-chunk-5-1.png) 
+![plot of chunk unnamed-chunk-6](figure/unnamed-chunk-6-1.png) 
 
 Pero hay bastante densidad de puntos más allá de los bigotes...
 
@@ -231,60 +244,66 @@ apply(glx, 2, function(x) anyNA(x))
 ##    FALSE
 ```
 
-De las variables de interés, hay 2 con datos faltantes: *VnMAG*, *S280MAG*
+De las variables de interés, hay 2 con datos faltantes: *VnMAG* (originalmente, antes de quitar outliers) y *S280MAG*:
 
 
 ```r
-faltantes_VnMAG <- which(is.na(glx$VnMAG))
 faltantes_S280MAG <- which(is.na(glx$S280MAG))
-faltantes_VnMAG
+length(faltantes_S280MAG)
 ```
 
 ```
-## integer(0)
+## [1] 23
 ```
 
-```r
-faltantes_S280MAG
-```
-
-```
-##  [1]   22   40   89  157  360  382  412  489  573  964 1018 1420 1449 1523
-## [15] 1524 1550 2255 2501 2806 2876 2880 2926 3413
-```
-
-También hay valores faltantes en las variables de error asociadas, en los mismos registros:
+También hay valores faltantes en la variable de error asociada:
 
 
 ```r
-faltantes_e.VbMAG <- which(is.na(glx$e.VbMAG))
 faltantes_e.280MA <- which(is.na(glx$e.S280MA))
-faltantes_e.VbMAG
+length(faltantes_e.280MA)
 ```
 
 ```
-## integer(0)
+## [1] 23
 ```
 
-```r
-faltantes_e.280MA
-```
-
-```
-##  [1]   22   40   89  157  360  382  412  489  573  964 1018 1420 1449 1523
-## [15] 1524 1550 2255 2501 2806 2876 2880 2926 3413
-```
-
-Son 23 registros en total. Los borramos:
+Hay faltantes en una variable que no es de interés. ¿Conservamos esos registros? Por precaución, sí:
 
 
 ```r
-glx_sin_faltantes <- glx[complete.cases(glx[,26:29]),]
-dim(glx)[1] - 23 == dim(glx_sin_faltantes)[1]
+faltantes_e.W420FE <- which(is.na(glx$e.W420FE))
+length(faltantes_e.W420FE)
 ```
 
 ```
-## [1] TRUE
+## [1] 142
+```
+
+Entonces escribimos una regla general para conservar sólo registros que no tengan valores faltantes las variables de interés:
+
+
+```r
+variables_de_interes <- c(1,2,3,4,10:29)
+names(glx)[variables_de_interes]
+```
+
+```
+##  [1] "Nr"       "Rmag"     "e.Rmag"   "ApDRmag"  "UjMAG"    "e.UjMAG" 
+##  [7] "BjMAG"    "e.BjMAG"  "VjMAG"    "e.VjMAG"  "usMAG"    "e.usMAG" 
+## [13] "gsMAG"    "e.gsMAG"  "rsMAG"    "e.rsMAG"  "UbMAG"    "e.UbMAG" 
+## [19] "BbMAG"    "e.BbMAG"  "VnMAG"    "e.VbMAG"  "S280MAG"  "e.S280MA"
+```
+
+```r
+glx_sin_faltantes <- glx[complete.cases(glx[,variables_de_interes]),]
+
+# registros eliminados
+nrow(glx) - nrow(glx_sin_faltantes)
+```
+
+```
+## [1] 23
 ```
 
 # Tarea 4
@@ -314,7 +333,7 @@ correlaciones <- cor(variables_de_magnitud_absoluta_en_reposo)
 corrplot.mixed(correlaciones, lower="circle", upper="number")
 ```
 
-![plot of chunk unnamed-chunk-13](figure/unnamed-chunk-13-1.png) 
+![plot of chunk unnamed-chunk-15](figure/unnamed-chunk-15-1.png) 
 
 A cada magnitud le restamos la magnitud a 280 nm:
 
@@ -341,4 +360,4 @@ correlaciones_de_normalizadas <- cor(variables_de_magnitud_absoluta_en_reposo_no
 corrplot.mixed(correlaciones_de_normalizadas, lower="circle", upper="number")
 ```
 
-![plot of chunk unnamed-chunk-15](figure/unnamed-chunk-15-1.png) 
+![plot of chunk unnamed-chunk-17](figure/unnamed-chunk-17-1.png) 

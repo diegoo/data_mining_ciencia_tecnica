@@ -45,7 +45,15 @@ p9 <- qplot(rsMAG, S280MAG-rsMAG, data = glx)
 grid.arrange(p1, p2, p3, p4, p5, p6, p7, p8, p9, ncol=2, nrow=5)
 ```
 
-Para separar outliers, podemos empezar por mirar el criterio de los bigotes (i.e. definir un par de barras, arriba y abajo, a 1.5 * distancia intercuartil desde la caja), y quitar los que excedan esos límites:
+Para separar outliers, podemos empezar por mirar el criterio de las desviaciones estándar: los puntos más allá de 3 se consideran outliers:
+```{r, results='markup', warning=FALSE, message=FALSE}
+glx2 <- glx[!apply(sapply(glx[,-1], function(x) { abs(scale(x)) >= 3 }), 1, any), ]
+
+# porcentaje de outliers que quitamos
+(nrow(glx) - nrow(glx2)) / nrow(glx) * 100
+```
+
+Eliminaríamos un 16.5% de los registros; un poco mucho. Otra posibilidad es usar el criterio de los bigotes (i.e. definir un par de barras, arriba y abajo, a 1.5 * distancia intercuartil desde la caja), y quitar los que excedan esos límites:
 
 ```{r, results='markup', fig.width = 12, fig.height = 6, warning=FALSE, message=FALSE}
 limite_inferior_boxplot <- function(magnitud) { q <- quantile(magnitud, na.rm=TRUE); return (q[2] - (q[4] - q[2]) * 1.5) }
@@ -109,29 +117,37 @@ Miramos si alguna variable tiene valores faltantes:
 apply(glx, 2, function(x) anyNA(x))
 ```
 
-De las variables de interés, hay 2 con datos faltantes: *VnMAG* (originalmente, antes de quitar outliers) y *S280MAG*
+De las variables de interés, hay 2 con datos faltantes: *VnMAG* (originalmente, antes de quitar outliers) y *S280MAG*:
 
 ```{r, results='markup', warning=FALSE, message=FALSE}
-faltantes_VnMAG <- which(is.na(glx$VnMAG))
 faltantes_S280MAG <- which(is.na(glx$S280MAG))
-faltantes_VnMAG
-faltantes_S280MAG
+length(faltantes_S280MAG)
 ```
 
-También hay valores faltantes en las variables de error asociadas, en los mismos registros:
+También hay valores faltantes en la variable de error asociada:
 
 ```{r, results='markup', warning=FALSE, message=FALSE}
-faltantes_e.VbMAG <- which(is.na(glx$e.VbMAG))
 faltantes_e.280MA <- which(is.na(glx$e.S280MA))
-faltantes_e.VbMAG
-faltantes_e.280MA
+length(faltantes_e.280MA)
 ```
 
-Son 23 registros en total. Los borramos:
+Hay faltantes en una variable que no es de interés. ¿Conservamos esos registros? Por precaución, sí:
 
 ```{r, results='markup', warning=FALSE, message=FALSE}
-glx_sin_faltantes <- glx[complete.cases(glx[,26:29]),]
-dim(glx)[1] - 23 == dim(glx_sin_faltantes)[1]
+faltantes_e.W420FE <- which(is.na(glx$e.W420FE))
+length(faltantes_e.W420FE)
+```
+
+Entonces escribimos una regla general para conservar sólo registros que no tengan valores faltantes las variables de interés:
+
+```{r, results='markup', warning=FALSE, message=FALSE}
+variables_de_interes <- c(1,2,3,4,10:29)
+names(glx)[variables_de_interes]
+
+glx_sin_faltantes <- glx[complete.cases(glx[,variables_de_interes]),]
+
+# registros eliminados
+nrow(glx) - nrow(glx_sin_faltantes)
 ```
 
 # Tarea 4
