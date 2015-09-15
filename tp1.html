@@ -309,10 +309,10 @@ grid.arrange(p1, p2, p3, p4, p5, p6, p7, p8, p9, ncol=2, nrow=5)
 
 <p>Para separar outliers, podemos empezar por mirar el criterio de las desviaciones estándar: los puntos más allá de 3 se consideran outliers:</p>
 
-<pre><code class="r">glx2 &lt;- glx[!apply(sapply(glx[,-1], function(x) { abs(scale(x)) &gt;= 3 }), 1, any), ]
+<pre><code class="r">glx_sin_outliers &lt;- glx[!apply(sapply(glx[,-1], function(x) { abs(scale(x)) &gt;= 3 }), 1, any), ]
 
 # porcentaje de outliers que quitamos
-(nrow(glx) - nrow(glx2)) / nrow(glx) * 100
+(nrow(glx) - nrow(glx_sin_outliers)) / nrow(glx) * 100
 </code></pre>
 
 <pre><code>## [1] 16.52224
@@ -344,53 +344,33 @@ grid.arrange(b1, b2, b3, b4, b5, b6, b7, b8, b9, b10, ncol=4, nrow=3)
 
 <p>Mejor quitamos sólo los que son claramente outliers, en las variables <em>ApRDmag</em> y de <em>BjMAG</em>:</p>
 
-<pre><code class="r"># antes de quitar outliers
-dim(glx)
-</code></pre>
-
-<pre><code>## [1] 3462   65
-</code></pre>
-
-<pre><code class="r">glx &lt;- subset(glx, ApDRmag &gt; -3.2)
-glx &lt;- subset(glx, BjMAG &lt; -7.0)
-
-# después
-dim(glx)
-</code></pre>
-
-<pre><code>## [1] 3460   65
+<pre><code class="r">glx_sin_outliers &lt;- subset(glx, ApDRmag &gt; -3.2)
+glx_sin_outliers &lt;- subset(glx_sin_outliers, BjMAG &lt; -7.0)
 </code></pre>
 
 <p>Y luego quitamos, para el resto de las variables de interés (<em>BbMAG</em>, <em>UjMAG</em>, <em>UbMAG</em>, <em>VjMAG</em>, <em>VnMAG</em>, <em>usMAG</em>, <em>gsMAG</em>, <em>rsMAG</em>), los puntos que se alejan demasiado por encima:</p>
 
-<pre><code class="r"># antes de quitar outliers
-dim(glx)
+<pre><code class="r">glx_sin_outliers &lt;- subset(glx_sin_outliers, BbMAG &lt; -9.0)
+glx_sin_outliers &lt;- subset(glx_sin_outliers, UjMAG &lt; -10.0)
+glx_sin_outliers &lt;- subset(glx_sin_outliers, UbMAG &lt; -10.0)
+glx_sin_outliers &lt;- subset(glx_sin_outliers, VjMAG &lt; -10.0)
+glx_sin_outliers &lt;- subset(glx_sin_outliers, VnMAG &lt; -10.0)
+glx_sin_outliers &lt;- subset(glx_sin_outliers, usMAG &lt; -10.0)
+glx_sin_outliers &lt;- subset(glx_sin_outliers, gsMAG &lt; -9.0)
+glx_sin_outliers &lt;- subset(glx_sin_outliers, rsMAG &lt; -9.0)
+
+# outliers quitados
+nrow(glx) - nrow(glx_sin_outliers)
 </code></pre>
 
-<pre><code>## [1] 3460   65
-</code></pre>
-
-<pre><code class="r">glx &lt;- subset(glx, BbMAG &lt; -9.0)
-glx &lt;- subset(glx, UjMAG &lt; -10.0)
-glx &lt;- subset(glx, UbMAG &lt; -10.0)
-glx &lt;- subset(glx, VjMAG &lt; -10.0)
-glx &lt;- subset(glx, VnMAG &lt; -10.0)
-glx &lt;- subset(glx, usMAG &lt; -10.0)
-glx &lt;- subset(glx, gsMAG &lt; -9.0)
-glx &lt;- subset(glx, rsMAG &lt; -9.0)
-
-# después
-dim(glx)
-</code></pre>
-
-<pre><code>## [1] 3450   65
+<pre><code>## [1] 12
 </code></pre>
 
 <h1>Tarea 3</h1>
 
 <p>Miramos si alguna variable tiene valores faltantes:</p>
 
-<pre><code class="r">apply(glx, 2, function(x) anyNA(x))
+<pre><code class="r">apply(glx_sin_outliers, 2, function(x) anyNA(x))
 </code></pre>
 
 <pre><code>##       Nr     Rmag   e.Rmag  ApDRmag    mumax      Mcz    e.Mcz    MCzml 
@@ -415,7 +395,7 @@ dim(glx)
 
 <p>De las variables de interés, hay 2 con datos faltantes: <em>VnMAG</em> (originalmente, antes de quitar outliers) y <em>S280MAG</em>:</p>
 
-<pre><code class="r">faltantes_S280MAG &lt;- which(is.na(glx$S280MAG))
+<pre><code class="r">faltantes_S280MAG &lt;- which(is.na(glx_sin_outliers$S280MAG))
 length(faltantes_S280MAG)
 </code></pre>
 
@@ -424,7 +404,7 @@ length(faltantes_S280MAG)
 
 <p>También hay valores faltantes en la variable de error asociada:</p>
 
-<pre><code class="r">faltantes_e.280MA &lt;- which(is.na(glx$e.S280MA))
+<pre><code class="r">faltantes_e.280MA &lt;- which(is.na(glx_sin_outliers$e.S280MA))
 length(faltantes_e.280MA)
 </code></pre>
 
@@ -433,17 +413,17 @@ length(faltantes_e.280MA)
 
 <p>Hay faltantes en una variable que no es de interés. ¿Conservamos esos registros? Por precaución, sí:</p>
 
-<pre><code class="r">faltantes_e.W420FE &lt;- which(is.na(glx$e.W420FE))
+<pre><code class="r">faltantes_e.W420FE &lt;- which(is.na(glx_sin_outliers$e.W420FE))
 length(faltantes_e.W420FE)
 </code></pre>
 
 <pre><code>## [1] 142
 </code></pre>
 
-<p>Entonces escribimos una regla general para conservar sólo registros que no tengan valores faltantes las variables de interés:</p>
+<p>Entonces escribimos una regla general para conservar sólo registros que no tengan valores faltantes en las variables de interés:</p>
 
 <pre><code class="r">variables_de_interes &lt;- c(1,2,3,4,10:29)
-names(glx)[variables_de_interes]
+names(glx_sin_outliers)[variables_de_interes]
 </code></pre>
 
 <pre><code>##  [1] &quot;Nr&quot;       &quot;Rmag&quot;     &quot;e.Rmag&quot;   &quot;ApDRmag&quot;  &quot;UjMAG&quot;    &quot;e.UjMAG&quot; 
@@ -452,10 +432,10 @@ names(glx)[variables_de_interes]
 ## [19] &quot;BbMAG&quot;    &quot;e.BbMAG&quot;  &quot;VnMAG&quot;    &quot;e.VbMAG&quot;  &quot;S280MAG&quot;  &quot;e.S280MA&quot;
 </code></pre>
 
-<pre><code class="r">glx_sin_faltantes &lt;- glx[complete.cases(glx[,variables_de_interes]),]
+<pre><code class="r">glx_sin_faltantes &lt;- glx_sin_outliers[complete.cases(glx_sin_outliers[,variables_de_interes]),]
 
 # registros eliminados
-nrow(glx) - nrow(glx_sin_faltantes)
+nrow(glx_sin_outliers) - nrow(glx_sin_faltantes)
 </code></pre>
 
 <pre><code>## [1] 23

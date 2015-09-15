@@ -123,10 +123,10 @@ grid.arrange(p1, p2, p3, p4, p5, p6, p7, p8, p9, ncol=2, nrow=5)
 Para separar outliers, podemos empezar por mirar el criterio de las desviaciones estándar: los puntos más allá de 3 se consideran outliers:
 
 ```r
-glx2 <- glx[!apply(sapply(glx[,-1], function(x) { abs(scale(x)) >= 3 }), 1, any), ]
+glx_sin_outliers <- glx[!apply(sapply(glx[,-1], function(x) { abs(scale(x)) >= 3 }), 1, any), ]
 
 # porcentaje de outliers que quitamos
-(nrow(glx) - nrow(glx2)) / nrow(glx) * 100
+(nrow(glx) - nrow(glx_sin_outliers)) / nrow(glx) * 100
 ```
 
 ```
@@ -163,54 +163,29 @@ Mejor quitamos sólo los que son claramente outliers, en las variables *ApRDmag*
 
 
 ```r
-# antes de quitar outliers
-dim(glx)
-```
-
-```
-## [1] 3462   65
-```
-
-```r
-glx <- subset(glx, ApDRmag > -3.2)
-glx <- subset(glx, BjMAG < -7.0)
-
-# después
-dim(glx)
-```
-
-```
-## [1] 3460   65
+glx_sin_outliers <- subset(glx, ApDRmag > -3.2)
+glx_sin_outliers <- subset(glx_sin_outliers, BjMAG < -7.0)
 ```
 
 Y luego quitamos, para el resto de las variables de interés (*BbMAG*, *UjMAG*, *UbMAG*, *VjMAG*, *VnMAG*, *usMAG*, *gsMAG*, *rsMAG*), los puntos que se alejan demasiado por encima:
 
 
 ```r
-# antes de quitar outliers
-dim(glx)
+glx_sin_outliers <- subset(glx_sin_outliers, BbMAG < -9.0)
+glx_sin_outliers <- subset(glx_sin_outliers, UjMAG < -10.0)
+glx_sin_outliers <- subset(glx_sin_outliers, UbMAG < -10.0)
+glx_sin_outliers <- subset(glx_sin_outliers, VjMAG < -10.0)
+glx_sin_outliers <- subset(glx_sin_outliers, VnMAG < -10.0)
+glx_sin_outliers <- subset(glx_sin_outliers, usMAG < -10.0)
+glx_sin_outliers <- subset(glx_sin_outliers, gsMAG < -9.0)
+glx_sin_outliers <- subset(glx_sin_outliers, rsMAG < -9.0)
+
+# outliers quitados
+nrow(glx) - nrow(glx_sin_outliers)
 ```
 
 ```
-## [1] 3460   65
-```
-
-```r
-glx <- subset(glx, BbMAG < -9.0)
-glx <- subset(glx, UjMAG < -10.0)
-glx <- subset(glx, UbMAG < -10.0)
-glx <- subset(glx, VjMAG < -10.0)
-glx <- subset(glx, VnMAG < -10.0)
-glx <- subset(glx, usMAG < -10.0)
-glx <- subset(glx, gsMAG < -9.0)
-glx <- subset(glx, rsMAG < -9.0)
-
-# después
-dim(glx)
-```
-
-```
-## [1] 3450   65
+## [1] 12
 ```
 
 
@@ -220,7 +195,7 @@ Miramos si alguna variable tiene valores faltantes:
 
 
 ```r
-apply(glx, 2, function(x) anyNA(x))
+apply(glx_sin_outliers, 2, function(x) anyNA(x))
 ```
 
 ```
@@ -248,7 +223,7 @@ De las variables de interés, hay 2 con datos faltantes: *VnMAG* (originalmente,
 
 
 ```r
-faltantes_S280MAG <- which(is.na(glx$S280MAG))
+faltantes_S280MAG <- which(is.na(glx_sin_outliers$S280MAG))
 length(faltantes_S280MAG)
 ```
 
@@ -260,7 +235,7 @@ También hay valores faltantes en la variable de error asociada:
 
 
 ```r
-faltantes_e.280MA <- which(is.na(glx$e.S280MA))
+faltantes_e.280MA <- which(is.na(glx_sin_outliers$e.S280MA))
 length(faltantes_e.280MA)
 ```
 
@@ -272,7 +247,7 @@ Hay faltantes en una variable que no es de interés. ¿Conservamos esos registro
 
 
 ```r
-faltantes_e.W420FE <- which(is.na(glx$e.W420FE))
+faltantes_e.W420FE <- which(is.na(glx_sin_outliers$e.W420FE))
 length(faltantes_e.W420FE)
 ```
 
@@ -280,12 +255,12 @@ length(faltantes_e.W420FE)
 ## [1] 142
 ```
 
-Entonces escribimos una regla general para conservar sólo registros que no tengan valores faltantes las variables de interés:
+Entonces escribimos una regla general para conservar sólo registros que no tengan valores faltantes en las variables de interés:
 
 
 ```r
 variables_de_interes <- c(1,2,3,4,10:29)
-names(glx)[variables_de_interes]
+names(glx_sin_outliers)[variables_de_interes]
 ```
 
 ```
@@ -296,10 +271,10 @@ names(glx)[variables_de_interes]
 ```
 
 ```r
-glx_sin_faltantes <- glx[complete.cases(glx[,variables_de_interes]),]
+glx_sin_faltantes <- glx_sin_outliers[complete.cases(glx_sin_outliers[,variables_de_interes]),]
 
 # registros eliminados
-nrow(glx) - nrow(glx_sin_faltantes)
+nrow(glx_sin_outliers) - nrow(glx_sin_faltantes)
 ```
 
 ```
