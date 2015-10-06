@@ -1,0 +1,44 @@
+---
+title: Data Mining en Ciencia y Técnica - TP1
+author: Ariel Aguirre, Miguel Barros, José Badillo, Diego Dell'Era
+output: pdf_document
+---
+
+TP1 - parte 2
+=============
+
+Cargamos el dataset y quitamos outliers:
+
+```{r, results='markup', warning=FALSE, message=FALSE}
+glx <- read.csv("COMBO17.csv", header = T, stringsAsFactors = F)
+glx$e.W420FE <- as.numeric(glx$e.W420FE)
+
+glx_sin_outliers <- subset(glx, ApDRmag > -3.2)
+glx_sin_outliers <- subset(glx_sin_outliers, BjMAG < -7.0)
+glx_sin_outliers <- subset(glx_sin_outliers, BbMAG < -9.0)
+glx_sin_outliers <- subset(glx_sin_outliers, UjMAG < -10.0)
+glx_sin_outliers <- subset(glx_sin_outliers, UbMAG < -10.0)
+glx_sin_outliers <- subset(glx_sin_outliers, VjMAG < -10.0)
+glx_sin_outliers <- subset(glx_sin_outliers, VnMAG < -10.0)
+glx_sin_outliers <- subset(glx_sin_outliers, usMAG < -10.0)
+glx_sin_outliers <- subset(glx_sin_outliers, gsMAG < -9.0)
+glx_sin_outliers <- subset(glx_sin_outliers, rsMAG < -9.0)
+
+nrow(glx) - nrow(glx_sin_outliers)
+```
+
+Buscamos datos faltantes:
+
+```{r, results='markup', warning=FALSE, message=FALSE}
+apply(glx_sin_outliers, 2, function(x) anyNA(x))
+variables_de_interes <- c(1,2,3,4,10:29)
+names(glx_sin_outliers)[variables_de_interes]
+glx_sin_faltantes <- glx_sin_outliers[complete.cases(glx_sin_outliers[,variables_de_interes]),]
+nrow(glx_sin_outliers) - nrow(glx_sin_faltantes)
+```
+
+```{r, results='markup', warning=FALSE, message=FALSE}
+espectrales <- c(10,12,14,16,18,20,22,24,26,28)
+variables_de_magnitud_absoluta_en_reposo <- glx_sin_faltantes[, espectrales]
+variables_de_magnitud_absoluta_en_reposo_normalizadas <- sweep(variables_de_magnitud_absoluta_en_reposo[,1:9], 1, variables_de_magnitud_absoluta_en_reposo$S280MAG, `-`)
+```

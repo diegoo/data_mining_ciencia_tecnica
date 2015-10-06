@@ -1,0 +1,62 @@
+Variables de interés:
+
+UjMAG, BjMAG, VjMAG
+usMAG, gsMAG, rsMAG
+UbMAG, BbMAG, VnMAG
+
+
+#       Nr     Rmag   e.Rmag  ApDRmag    mumax      Mcz    e.Mcz    MCzml 
+#    FALSE    FALSE    FALSE    FALSE    FALSE    FALSE    FALSE    FALSE 
+#  chi2red    UjMAG  e.UjMAG    BjMAG  e.BjMAG    VjMAG  e.VjMAG    usMAG 
+#    FALSE    FALSE    FALSE    FALSE    FALSE    FALSE    FALSE    FALSE 
+#  e.usMAG    gsMAG  e.gsMAG    rsMAG  e.rsMAG    UbMAG  e.UbMAG    BbMAG 
+#    FALSE    FALSE    FALSE    FALSE    FALSE    FALSE    FALSE    FALSE 
+#  e.BbMAG    VnMAG  e.VbMAG  S280MAG e.S280MA   W420FE e.W420FE   W462FE 
+#    FALSE     TRUE     TRUE     TRUE     TRUE    FALSE     TRUE    FALSE 
+# e.W462FE   W485FD e.W485FD   W518FE e.W518FE   W571FS e.W571FS   W604FE 
+#    FALSE    FALSE    FALSE    FALSE    FALSE    FALSE    FALSE    FALSE 
+# e.W604FE   W646FD e.W646FD   W696FE e.W696FE   W753FE e.W753FE   W815FS 
+#    FALSE    FALSE    FALSE    FALSE    FALSE    FALSE    FALSE    FALSE 
+# e.W815FS   W856FD e.W856FD   W914FD e.W914FD   W914FE e.W914FE      UFS 
+#    FALSE    FALSE    FALSE    FALSE    FALSE    FALSE    FALSE    FALSE 
+#    e.UFS      BFS    e.BFS      VFD    e.VFD      RFS    e.RFS      IFD 
+#    FALSE    FALSE    FALSE    FALSE    FALSE    FALSE    FALSE    FALSE 
+#    e.IFD 
+#    FALSE 
+
+library(corrgram)
+corrgram(variables_de_magnitud_absoluta_en_reposo, order=NULL, lower.panel=NULL, upper.panel=panel.pie, main="correlaciones entre variables de magnitud absoluta en reposo")
+# panel.shade
+# panel.pts
+
+library(Hmisc)
+rcorrelaciones <- rcorr(as.matrix(variables_de_magnitud_absoluta_en_reposo), type="pearson")
+
+
+```{r, results='markup', fig.width = 12, fig.height = 6, warning=FALSE, message=FALSE}
+h1 <- qplot(BjMAG, data = glx)
+h2 <- qplot(BbMAG, data = glx)
+h3 <- qplot(UjMAG, data = glx)
+h4 <- qplot(UbMAG, data = glx)
+h5 <- qplot(VjMAG, data = glx)
+h6 <- qplot(VnMAG, data = glx)
+h7 <- qplot(usMAG, data = glx)
+h8 <- qplot(gsMAG, data = glx)
+h9 <- qplot(rsMAG, data = glx)
+grid.arrange(h1, h2, h3, h4, h5, h6, h7, h8, h9, ncol=3, nrow=3)
+```
+
+
+
+Para el resto de las variables (*BbMag*, *UjMAG*, *UbMAG*, *VjMAG*, *VnMaG*, *usMAG*, *gsMAG*, *rsMAG*), quitamos algunos puntos por encima y por debajo, donde dejan de ser menos densos (es un criterio arbitrario; si tienen algo mejor, usamos eso):
+
+```{r, results='markup', warning=FALSE, message=FALSE}
+glx <- subset(glx, glx$BbMAG < -22.6 & glx$BbMAG > -9.1)
+glx <- subset(glx, glx$UjMAG < -22.5 & glx$UjMAG > -10)
+glx <- subset(glx, glx$UbMAG < -22.5 & glx$UbMAG > -10)
+glx <- subset(glx, glx$VjMAG < -23.2 & glx$VjMAG > -10)
+glx <- subset(glx, glx$VnMAG > -10)
+glx <- subset(glx, glx$usMAG < -23.2 & glx$usMAG > -10)
+glx <- subset(glx, glx$gsMAG > -9.5)
+glx <- subset(glx, glx$rsMAG > -9.0)
+```
