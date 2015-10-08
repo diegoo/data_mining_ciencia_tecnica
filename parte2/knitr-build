@@ -1,0 +1,5 @@
+library(knitr)
+library(markdown)
+library(rmarkdown)
+knit('tp1.parte2.Rmd', 'tp1.parte2.md'); markdownToHTML('tp1.parte2.md', 'tp1.parte2.html')
+# rmarkdown::render('tp1.parte2.Rmd')

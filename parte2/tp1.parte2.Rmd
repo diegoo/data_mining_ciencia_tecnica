@@ -7,22 +7,29 @@ output: pdf_document
 TP1 - parte 2
 =============
 
-Cargamos el dataset y quitamos outliers:
+
+```{r, echo=FALSE}
+# cargamos el dataset.
+glx <- read.csv("dmcyt_tp2.csv", header = T, stringsAsFactors = F, sep = '|')
+glx$mc_class <- as.factor(glx$mc_class)
+
+# viene con bocha de decimales; evitemos que R los trunque
+options(digits=16)
+```
+
+Quitamos outliers:
 
 ```{r, results='markup', warning=FALSE, message=FALSE}
-glx <- read.csv("COMBO17.csv", header = T, stringsAsFactors = F)
-glx$e.W420FE <- as.numeric(glx$e.W420FE)
-
-glx_sin_outliers <- subset(glx, ApDRmag > -3.2)
-glx_sin_outliers <- subset(glx_sin_outliers, BjMAG < -7.0)
-glx_sin_outliers <- subset(glx_sin_outliers, BbMAG < -9.0)
-glx_sin_outliers <- subset(glx_sin_outliers, UjMAG < -10.0)
-glx_sin_outliers <- subset(glx_sin_outliers, UbMAG < -10.0)
-glx_sin_outliers <- subset(glx_sin_outliers, VjMAG < -10.0)
-glx_sin_outliers <- subset(glx_sin_outliers, VnMAG < -10.0)
-glx_sin_outliers <- subset(glx_sin_outliers, usMAG < -10.0)
-glx_sin_outliers <- subset(glx_sin_outliers, gsMAG < -9.0)
-glx_sin_outliers <- subset(glx_sin_outliers, rsMAG < -9.0)
+glx_sin_outliers <- subset(glx, apd_rmag > -3.2)
+glx_sin_outliers <- subset(glx_sin_outliers, bjmag < -7.0)
+glx_sin_outliers <- subset(glx_sin_outliers, ujmag < -10.0)
+glx_sin_outliers <- subset(glx_sin_outliers, vjmag < -10.0)
+glx_sin_outliers <- subset(glx_sin_outliers, usmag < -10.0)
+glx_sin_outliers <- subset(glx_sin_outliers, gsmag < -9.0)
+glx_sin_outliers <- subset(glx_sin_outliers, rsmag < -9.0)
+# glx_sin_outliers <- subset(glx_sin_outliers, bbmag < -9.0) # todos los valores en 0?
+# glx_sin_outliers <- subset(glx_sin_outliers, ubmag < -10.0) # todos los valores en 0?
+# glx_sin_outliers <- subset(glx_sin_outliers, vbmag < -10.0) # todos los valores en 0? (antes era vnmag)
 
 nrow(glx) - nrow(glx_sin_outliers)
 ```
@@ -31,14 +38,12 @@ Buscamos datos faltantes:
 
 ```{r, results='markup', warning=FALSE, message=FALSE}
 apply(glx_sin_outliers, 2, function(x) anyNA(x))
-variables_de_interes <- c(1,2,3,4,10:29)
-names(glx_sin_outliers)[variables_de_interes]
-glx_sin_faltantes <- glx_sin_outliers[complete.cases(glx_sin_outliers[,variables_de_interes]),]
+glx_sin_faltantes <- glx_sin_outliers[complete.cases(glx_sin_outliers),]
 nrow(glx_sin_outliers) - nrow(glx_sin_faltantes)
 ```
 
-```{r, results='markup', warning=FALSE, message=FALSE}
-espectrales <- c(10,12,14,16,18,20,22,24,26,28)
-variables_de_magnitud_absoluta_en_reposo <- glx_sin_faltantes[, espectrales]
-variables_de_magnitud_absoluta_en_reposo_normalizadas <- sweep(variables_de_magnitud_absoluta_en_reposo[,1:9], 1, variables_de_magnitud_absoluta_en_reposo$S280MAG, `-`)
+```{r, echo=FALSE}
+# Guardamos el dataset. Sólo van con comillas la clase ('mc_class') y el signo de la declinación ('de_'); el resto son números
+# write.table(format(glx_sin_faltantes, digits=16), file = "dmcyt_tp2.tarea_1.csv", row.names = FALSE, na="", col.names = TRUE, sep="|", quote = c(5, 15))
 ```
+
