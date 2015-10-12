@@ -7,13 +7,157 @@ output: pdf_document
 TP1 - parte 2
 =============
 
+## Tarea 1
+
+Aplicamos los pasos de la parte 1.
 
 ```{r, echo=FALSE}
-# cargamos el dataset.
+# leer dataset y corregir formato de variable no numérica
+glx <- read.csv("COMBO17.csv", header = T, stringsAsFactors = F)
+glx$e.W420FE <- as.numeric(glx$e.W420FE)
+
+# quitar outliers
+glx_sin_outliers <- subset(glx, ApDRmag > -3.2)
+glx_sin_outliers <- subset(glx_sin_outliers, BjMAG < -7.0)
+glx_sin_outliers <- subset(glx_sin_outliers, BbMAG < -9.0)
+glx_sin_outliers <- subset(glx_sin_outliers, UjMAG < -10.0)
+glx_sin_outliers <- subset(glx_sin_outliers, UbMAG < -10.0)
+glx_sin_outliers <- subset(glx_sin_outliers, VjMAG < -10.0)
+glx_sin_outliers <- subset(glx_sin_outliers, VnMAG < -10.0)
+glx_sin_outliers <- subset(glx_sin_outliers, usMAG < -10.0)
+glx_sin_outliers <- subset(glx_sin_outliers, gsMAG < -9.0)
+glx_sin_outliers <- subset(glx_sin_outliers, rsMAG < -9.0)
+
+# quitar faltantes
+variables_de_interes <- c(1,2,3,4,10:29)
+glx_sin_faltantes <- glx_sin_outliers[complete.cases(glx_sin_outliers[,variables_de_interes]),]
+
+# guardar dataset procesado (sólo columnas con variables de interés)
+variables_de_interes_finales <- c(1,2,4,10,12,14,16,18,20,22,24,26,28)
+glx_procesado_parte_1 <- glx_sin_faltantes[,variables_de_interes_finales]
+names(glx_procesado_parte_1) <- c("nr", "rmag", "apdrmag", "ujmag", "bjmag", "vjmag", "usmag", "gsmag", "rsmag", "ubmag", "bbmag", "vbmag", "s280mag")
+write.csv(glx_procesado_parte_1, "dataset.procesado.parte.1.csv", row.names=FALSE)
+```
+
+```{r, results='markup', warning=FALSE, message=FALSE}
+glx_0 <- read.csv("dataset.procesado.parte.1.csv", header = T, stringsAsFactors = F)
+head(glx_0, 1)
+```
+
+Analizamos agrupamientos usando k-medias. Pasos:
+
+1 - Quitamos vaariables correlacionadas
+
+Las variables con índice de correlación 1 (normalizadas restando `s280`) encontradas en la parte 1 son:
+(ujmag, usmag, ubmag)
+(bjmag, bbmag)
+(vjmag, rsmag, vnmag)
+
+Nos quedamos con 1 que represente a cada grupo:
+
+```{r, results='markup', warning=FALSE, message=FALSE}
+glx_1 <- glx[,c(1:6)]
+```
+
+2 - Estandarizamos variables
+
+# sólo estandarizamos variables con mediciones (sin la primera columna, porque es el número de galaxia)
+
+```{r, results='markup', warning=FALSE, message=FALSE}
+glx_2 <- scale(glx_1[,c(2:6)])
+```
+
+3 - Aplicamos k-means
+
+```{r, results='markup', warning=FALSE, message=FALSE}
+glx_3 <- kmeans(glx_2, centers = 2)
+```
+
+4 - Determinamos el `k` óptimo:
+
+4.1 - Gráficamente
+
+Podemos ver el `k` óptimo como el punto de corte en que empieza a aumentar marcadamente la suma de cuadrados dentro del cluster:
+
+```{r, results='markup', warning=FALSE, message=FALSE}
+# a plot of the total within-groups sums of squares against the number of clusters - a bend in the graph suggests the appropriate number of clusters
+wssplot <- function(data, nc=15, seed=1234){wss <- (nrow(data)-1)*sum(apply(data,2,var))
+               for (i in 2:nc){
+                    set.seed(seed)
+                    wss[i] <- sum(kmeans(data, centers=i)$withinss)}
+                plot(1:nc, wss, type="b", xlab="Number of Clusters",
+                     ylab="Within groups sum of squares")}
+
+wssplot(glx_2)
+```
+4.2 - Analíticamente
+
+Otra forma de ver el `k` óptimo es calcular número de clusters que maximiza el índice de silhouette:
+
+```{r, results='markup', warning=FALSE, message=FALSE}
+set.seed(1234)
+nc <- NbClust(glx_2, min.nc=2, max.nc=15, method="kmeans", index="silhouette")
+nc$Best.nc
+```
+
+Sugiere usar `k` = 2. Ploteamos el índice por número de clusters:
+
+```{r, results='markup', warning=FALSE, message=FALSE}
+nc$All.index
+number_of_clusters <- c(2:10)
+indice_silhouette <- c(0.4659,0.3779,0.3223,0.3429,0.2885,0.2631,0.2648,0.2677,0.2687)
+plot(number_of_clusters, indice_silhouette, type="o")
+```
+
+Calculamos una matrix de distancias:
+
+```{r, results='markup', warning=FALSE, message=FALSE}
+library(cluster)
+glx_2_dist <- dist(glx_2)
+```
+
+```{r, results='markup', warning=FALSE, message=FALSE}
+# una función que, dado un k, clusteriza por PAM -> calcula silhouette -> devuelve ancho promedio
+silhoutte_kmeans <- function(k) {
+  c <- kmeans(glx_2, centers = k)$cluster
+  s silhouette(c, glx_2_dist)
+  return(summary(s)$avg.width)
+}
+
+# aplicamos la función para valores de k entre 2 y 10
+indice_por_k_kmeans <- sapply(c(2:4), silhoutte_kmeans)
+which.max(indice_por_k_kmeans)
+```
+
+El `k` que maximiza el ancho promedio de silhouette para todos los clusters creados via K-means es el primero, 2.
+
+## Tarea 1 optativa: Comparar métodos
+
+Ahora usamos PAM en lugar de K-means:
+
+```{r, results='markup', warning=FALSE, message=FALSE}
+# una función que, dado un k, clusteriza por PAM -> calcula silhouette -> devuelve ancho promedio
+silhoutte_pam <- function(k) {
+  c <- pam(glx_2_dist, k=k, diss=T)
+  s <- silhouette(c)
+  return(summary(s)$avg.width)
+}
+
+# aplicamos la función para valores de k entre 2 y 10
+indice_por_k_pam <- sapply(c(2:10), silhoutte_pam)
+which.max(indice_por_k_pam)
+```
+
+El `k` que maximiza el ancho promedio de silhouette para todos los clusters creados via PAM es el primero, 2.
+
+## Tarea 2
+
+```{r, echo=FALSE}
+# partimos de un .csv que fue creado a partir del dataset el original descargado del website
 glx <- read.csv("dmcyt_tp2.csv", header = T, stringsAsFactors = F, sep = '|')
 glx$mc_class <- as.factor(glx$mc_class)
 
-# viene con bocha de decimales; evitemos que R los trunque
+# evitemos que R trunque decimales
 options(digits=16)
 ```
 
