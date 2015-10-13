@@ -7,11 +7,18 @@ output: pdf_document
 TP1 - parte 2
 =============
 
+```{r, echo=FALSE, warning=FALSE, message=FALSE}
+library(knitr)
+library(markdown)
+# para armar el documento:
+# knit('tp1.parte2.Rmd', 'tp1.parte2.md'); markdownToHTML('tp1.parte2.md', 'tp1.parte2.html')
+```
+
 ## Tarea 1
 
 Aplicamos los pasos de la parte 1.
 
-```{r, echo=FALSE}
+```{r, echo=FALSE, warning=FALSE, message=FALSE}
 # leer dataset y corregir formato de variable no numérica
 glx <- read.csv("COMBO17.csv", header = T, stringsAsFactors = F)
 glx$e.W420FE <- as.numeric(glx$e.W420FE)
@@ -36,7 +43,7 @@ glx_sin_faltantes <- glx_sin_outliers[complete.cases(glx_sin_outliers[,variables
 variables_de_interes_finales <- c(1,2,4,10,12,14,16,18,20,22,24,26,28)
 glx_procesado_parte_1 <- glx_sin_faltantes[,variables_de_interes_finales]
 names(glx_procesado_parte_1) <- c("nr", "rmag", "apdrmag", "ujmag", "bjmag", "vjmag", "usmag", "gsmag", "rsmag", "ubmag", "bbmag", "vbmag", "s280mag")
-write.csv(glx_procesado_parte_1, "dataset.procesado.parte.1.csv", row.names=FALSE)
+write.csv(glx_procesado_parte_1, "dataset.procesado.parte.1.csv", row.names = FALSE)
 ```
 
 ```{r, results='markup', warning=FALSE, message=FALSE}
@@ -46,68 +53,50 @@ head(glx_0, 1)
 
 Analizamos agrupamientos usando k-medias. Pasos:
 
-1 - Quitamos vaariables correlacionadas
+* Quitamos variables correlacionadas
 
-Las variables con índice de correlación 1 (normalizadas restando `s280`) encontradas en la parte 1 son:
-(ujmag, usmag, ubmag)
-(bjmag, bbmag)
-(vjmag, rsmag, vnmag)
+Las variables que obviamente tienen índice de correlación 1 (normalizadas restando `s280`), según los resultados de la parte 1, son:
+
+```{r, results='markup', warning=FALSE, message=FALSE}
+# (ujmag, usmag, ubmag)
+# (bjmag, bbmag)
+# (vjmag, rsmag, vnmag)
+```
 
 Nos quedamos con 1 que represente a cada grupo:
 
 ```{r, results='markup', warning=FALSE, message=FALSE}
-glx_1 <- glx[,c(1:6)]
+glx_1 <- glx_0[,c(1:6)]
 ```
 
-2 - Estandarizamos variables
+* Estandarizamos variables
 
+```{r, results='markup', warning=FALSE, message=FALSE}
 # sólo estandarizamos variables con mediciones (sin la primera columna, porque es el número de galaxia)
-
-```{r, results='markup', warning=FALSE, message=FALSE}
 glx_2 <- scale(glx_1[,c(2:6)])
+head(glx_2, 1)
 ```
 
-3 - Aplicamos k-means
+* Determinamos el `k` óptimo para K-means:
+
+- Gráficamente
+
+Podemos ver el `k` óptimo como el punto de corte en que deja de disminuir marcadamente la suma de cuadrados dentro del cluster. En otras palabras, el punto en que la cohesión de los clusters deja de aumentar.
 
 ```{r, results='markup', warning=FALSE, message=FALSE}
-glx_3 <- kmeans(glx_2, centers = 2)
-```
-
-4 - Determinamos el `k` óptimo:
-
-4.1 - Gráficamente
-
-Podemos ver el `k` óptimo como el punto de corte en que empieza a aumentar marcadamente la suma de cuadrados dentro del cluster:
-
-```{r, results='markup', warning=FALSE, message=FALSE}
-# a plot of the total within-groups sums of squares against the number of clusters - a bend in the graph suggests the appropriate number of clusters
 wssplot <- function(data, nc=15, seed=1234){wss <- (nrow(data)-1)*sum(apply(data,2,var))
                for (i in 2:nc){
                     set.seed(seed)
                     wss[i] <- sum(kmeans(data, centers=i)$withinss)}
-                plot(1:nc, wss, type="b", xlab="Number of Clusters",
-                     ylab="Within groups sum of squares")}
+                plot(1:nc, wss, type="b", xlab="Número de clusters",
+                     ylab="Suma de cuadrados dentro del cluster")}
 
 wssplot(glx_2)
 ```
-4.2 - Analíticamente
 
-Otra forma de ver el `k` óptimo es calcular número de clusters que maximiza el índice de silhouette:
+El gráfico sugiere usar `k` = 3.
 
-```{r, results='markup', warning=FALSE, message=FALSE}
-set.seed(1234)
-nc <- NbClust(glx_2, min.nc=2, max.nc=15, method="kmeans", index="silhouette")
-nc$Best.nc
-```
-
-Sugiere usar `k` = 2. Ploteamos el índice por número de clusters:
-
-```{r, results='markup', warning=FALSE, message=FALSE}
-nc$All.index
-number_of_clusters <- c(2:10)
-indice_silhouette <- c(0.4659,0.3779,0.3223,0.3429,0.2885,0.2631,0.2648,0.2677,0.2687)
-plot(number_of_clusters, indice_silhouette, type="o")
-```
+- Analíticamente
 
 Calculamos una matrix de distancias:
 
@@ -116,22 +105,24 @@ library(cluster)
 glx_2_dist <- dist(glx_2)
 ```
 
+Usamos la matriz de distancias con `kmeans`:
+
 ```{r, results='markup', warning=FALSE, message=FALSE}
-# una función que, dado un k, clusteriza por PAM -> calcula silhouette -> devuelve ancho promedio
+# una función que, dado un k, clusteriza por kmeans -> calcula silhouette -> devuelve ancho promedio
 silhoutte_kmeans <- function(k) {
   c <- kmeans(glx_2, centers = k)$cluster
-  s silhouette(c, glx_2_dist)
+  s <- silhouette(c, glx_2_dist)
   return(summary(s)$avg.width)
 }
 
 # aplicamos la función para valores de k entre 2 y 10
-indice_por_k_kmeans <- sapply(c(2:4), silhoutte_kmeans)
+indice_por_k_kmeans <- sapply(c(2:10), silhoutte_kmeans)
 which.max(indice_por_k_kmeans)
 ```
 
-El `k` que maximiza el ancho promedio de silhouette para todos los clusters creados via K-means es el primero, 2.
+El `k` que maximiza el ancho promedio de silhouette para todos los clusters creados via K-means es el segundo => `k` = 3.
 
-## Tarea 1 optativa: Comparar métodos
+## Tarea 1 (optativa): Comparar métodos
 
 Ahora usamos PAM en lugar de K-means:
 
@@ -148,12 +139,24 @@ indice_por_k_pam <- sapply(c(2:10), silhoutte_pam)
 which.max(indice_por_k_pam)
 ```
 
-El `k` que maximiza el ancho promedio de silhouette para todos los clusters creados via PAM es el primero, 2.
+El `k` que maximiza el ancho promedio de silhouette para todos los clusters creados via PAM es el primero => `k` = 2.
+
+También podemos probar otra biblioteca para clusterizar maximizando el índice de Silhouette:
+
+```{r, results='markup', warning=FALSE, message=FALSE}
+library(NbClust)
+set.seed(1234)
+nc <- NbClust(glx_2, min.nc = 2, max.nc = 10, method = "kmeans", index = "silhouette")
+nc$Best.nc
+```
+
+Este método también sugiere usar `k` = 2.
 
 ## Tarea 2
 
-```{r, echo=FALSE}
-# partimos de un .csv que fue creado a partir del dataset el original descargado del website
+Cargamos el dataset entero (partimos de un .csv que fue creado a partir del dataset original descargado del website y parseado según las instrucciones para cada campo):
+
+```{r, results='markup', warning=FALSE, message=FALSE}
 glx <- read.csv("dmcyt_tp2.csv", header = T, stringsAsFactors = F, sep = '|')
 glx$mc_class <- as.factor(glx$mc_class)
 
@@ -181,13 +184,87 @@ nrow(glx) - nrow(glx_sin_outliers)
 Buscamos datos faltantes:
 
 ```{r, results='markup', warning=FALSE, message=FALSE}
-apply(glx_sin_outliers, 2, function(x) anyNA(x))
 glx_sin_faltantes <- glx_sin_outliers[complete.cases(glx_sin_outliers),]
 nrow(glx_sin_outliers) - nrow(glx_sin_faltantes)
 ```
 
-```{r, echo=FALSE}
-# Guardamos el dataset. Sólo van con comillas la clase ('mc_class') y el signo de la declinación ('de_'); el resto son números
-# write.table(format(glx_sin_faltantes, digits=16), file = "dmcyt_tp2.tarea_1.csv", row.names = FALSE, na="", col.names = TRUE, sep="|", quote = c(5, 15))
+Dimensiones del dataset final:
+
+```{r, results='markup', warning=FALSE, message=FALSE}
+dim(glx_sin_faltantes)
 ```
 
+```{r, echo=FALSE, warning=FALSE, message=FALSE}
+# Guardamos el dataset. Sólo van con comillas la clase ('mc_class') y el signo de la declinación ('de_'); el resto son números
+# write.table(format(glx_sin_faltantes, digits=16), file = "dmcyt_tp2.tarea_2.csv", row.names = FALSE, na="", col.names = TRUE, sep="|", quote = c(5, 15))
+```
+
+## Tarea 3
+
+```{r, echo=FALSE, warning=FALSE, message=FALSE}
+glx_sin_faltantes <- read.csv("dmcyt_tp2.tarea_2.csv", sep="|")
+```
+
+Extraemos las variables que tienen mediciones para poder encontrar clusters:
+
+```{r, results='markup', warning=FALSE, message=FALSE}
+glx_tarea3.0 <- glx_sin_faltantes[,c(11,13,17,18,19)]
+```
+
+Ahora calculamos distancias para correr PAM y después Silhouette:
+
+```{r, results='markup', warning=FALSE, message=FALSE}
+glx_tarea3.1 <- dist(scale(glx_tarea3.0))
+```
+
+Pinchó. ¿Por qué?
+
+Calcular la matriz de distancias implica que, por cada elemento de la matriz, hay que calcular la distancia a todos los demás elementos. Es decir, es un procedimiento cuadrático: si la matriz tiene `n` elementos, hay que almacenar `n x n` distancias.
+
+Se puede deducir, para el caso de la implementación de R, dónde está el problema de alocación de memoria:
+
+```{r, results='markup', warning=FALSE, message=FALSE}
+# tomamos las primeras 16000 filas
+glx_muestra_16k <- glx_sin_faltantes[c(1:16000), c(11,13,17,18,19)]
+
+# intentamos calcular la matriz, y la imprimimos para forzarlo a que nos devuelve un mensaje de error
+dist(scale(glx_muestra_16k))
+```
+
+Por el mensaje de error, vemos que no puede alocar espacio (0.975 Gb). Entonces podemos despejar la cantidad de bytes que usa para guardar distancias:
+
+```{r, results='markup', warning=FALSE, message=FALSE}
+0.975 * (1024)^3 / (16000^2)
+```
+
+Son 4 bytes. Usando apenas 4 bytes para almacenar distancias, el cálculo para una matriz de tamaño modesto se vuelve demasiado costoso, rápidamente.
+
+Podemos probar de nuevo restringiendo el tamaño del dataset (y limpiando un poco con gc()).
+```{r, echo=FALSE, warning=FALSE, message=FALSE}
+gc()
+```
+
+Tomamos una muestra de 10000 objetos (en la compu donde corre esto, si tomamos más de 15000 pincha). Agrupamos con K-means buscando el `k` óptimo:
+
+```{r, results='markup', warning=FALSE, message=FALSE}
+filas_muestra <- sample(nrow(glx_sin_faltantes), size = 10000)
+glx_muestra_10k <- glx_sin_faltantes[filas_muestra,]
+glx_muestra_10k_mediciones <- glx_muestra_10k[,c(11,13,17,18,19)]
+head(glx_muestra_10k_mediciones, 1)
+```
+
+```{r, results='markup', warning=FALSE, message=FALSE}
+glx_muestra_10k_dist <- dist(scale(glx_muestra_10k_mediciones))
+
+silhoutte_kmeans <- function(k) {
+  c <- kmeans(glx_muestra_10k_mediciones, centers = k)$cluster
+  s <- silhouette(c, glx_muestra_10k_dist)
+  return(summary(s)$avg.width)
+}
+
+# aplicamos la función para valores de k entre 2 y 10
+indice_por_k_kmeans <- sapply(c(2:20), silhoutte_kmeans)
+which.max(indice_por_k_kmeans)
+```
+
+Ahora obtenemos el segundo k, o sea `k` = 3.

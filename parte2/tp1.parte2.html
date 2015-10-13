@@ -203,6 +203,149 @@ hr {
 <body>
 <h1>TP1 - parte 2</h1>
 
+<h2>Tarea 1</h2>
+
+<p>Aplicamos los pasos de la parte 1.</p>
+
+<pre><code class="r">glx_0 &lt;- read.csv(&quot;dataset.procesado.parte.1.csv&quot;, header = T, stringsAsFactors = F)
+head(glx_0, 1)
+</code></pre>
+
+<pre><code>##   nr   rmag            apdrmag  ujmag  bjmag  vjmag  usmag gsmag  rsmag
+## 1  6 24.995 0.9350000000000001 -17.67 -17.54 -17.76 -17.83 -17.6 -17.97
+##    ubmag  bbmag  vbmag s280mag
+## 1 -17.76 -17.53 -17.76  -18.22
+</code></pre>
+
+<p>Analizamos agrupamientos usando k-medias. Pasos:</p>
+
+<ul>
+<li>Quitamos variables correlacionadas</li>
+</ul>
+
+<p>Las variables que obviamente tienen índice de correlación 1 (normalizadas restando <code>s280</code>), según los resultados de la parte 1, son:</p>
+
+<pre><code class="r"># (ujmag, usmag, ubmag)
+# (bjmag, bbmag)
+# (vjmag, rsmag, vnmag)
+</code></pre>
+
+<p>Nos quedamos con 1 que represente a cada grupo:</p>
+
+<pre><code class="r">glx_1 &lt;- glx_0[,c(1:6)]
+</code></pre>
+
+<ul>
+<li>Estandarizamos variables</li>
+</ul>
+
+<pre><code class="r"># sólo estandarizamos variables con mediciones (sin la primera columna, porque es el número de galaxia)
+glx_2 &lt;- scale(glx_1[,c(2:6)])
+head(glx_2, 1)
+</code></pre>
+
+<pre><code>##                    rmag           apdrmag              ujmag
+## [1,] 0.7481409363139495 2.530149066971338 0.1184136486227584
+##                   bjmag              vjmag
+## [1,] 0.1237063466556295 0.1841887849416674
+</code></pre>
+
+<ul>
+<li><p>Determinamos el <code>k</code> óptimo para K-means:</p></li>
+<li><p>Gráficamente</p></li>
+</ul>
+
+<p>Podemos ver el <code>k</code> óptimo como el punto de corte en que deja de disminuir marcadamente la suma de cuadrados dentro del cluster. En otras palabras, el punto en que la cohesión de los clusters deja de aumentar.</p>
+
+<pre><code class="r">wssplot &lt;- function(data, nc=15, seed=1234){wss &lt;- (nrow(data)-1)*sum(apply(data,2,var))
+               for (i in 2:nc){
+                    set.seed(seed)
+                    wss[i] &lt;- sum(kmeans(data, centers=i)$withinss)}
+                plot(1:nc, wss, type=&quot;b&quot;, xlab=&quot;Número de clusters&quot;,
+                     ylab=&quot;Suma de cuadrados dentro del cluster&quot;)}
+
+wssplot(glx_2)
+</code></pre>
+
+<p><img src="data:image/png;base64,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" alt="plot of chunk unnamed-chunk-7"/> </p>
+
+<p>El gráfico sugiere usar <code>k</code> = 3.</p>
+
+<ul>
+<li>Analíticamente</li>
+</ul>
+
+<p>Calculamos una matrix de distancias:</p>
+
+<pre><code class="r">library(cluster)
+glx_2_dist &lt;- dist(glx_2)
+</code></pre>
+
+<p>Usamos la matriz de distancias con <code>kmeans</code>:</p>
+
+<pre><code class="r"># una función que, dado un k, clusteriza por kmeans -&gt; calcula silhouette -&gt; devuelve ancho promedio
+silhoutte_kmeans &lt;- function(k) {
+  c &lt;- kmeans(glx_2, centers = k)$cluster
+  s &lt;- silhouette(c, glx_2_dist)
+  return(summary(s)$avg.width)
+}
+
+# aplicamos la función para valores de k entre 2 y 10
+indice_por_k_kmeans &lt;- sapply(c(2:10), silhoutte_kmeans)
+which.max(indice_por_k_kmeans)
+</code></pre>
+
+<pre><code>## [1] 2
+</code></pre>
+
+<p>El <code>k</code> que maximiza el ancho promedio de silhouette para todos los clusters creados via K-means es el segundo =&gt; <code>k</code> = 3.</p>
+
+<h2>Tarea 1 (optativa): Comparar métodos</h2>
+
+<p>Ahora usamos PAM en lugar de K-means:</p>
+
+<pre><code class="r"># una función que, dado un k, clusteriza por PAM -&gt; calcula silhouette -&gt; devuelve ancho promedio
+silhoutte_pam &lt;- function(k) {
+  c &lt;- pam(glx_2_dist, k=k, diss=T)
+  s &lt;- silhouette(c)
+  return(summary(s)$avg.width)
+}
+
+# aplicamos la función para valores de k entre 2 y 10
+indice_por_k_pam &lt;- sapply(c(2:10), silhoutte_pam)
+which.max(indice_por_k_pam)
+</code></pre>
+
+<pre><code>## [1] 1
+</code></pre>
+
+<p>El <code>k</code> que maximiza el ancho promedio de silhouette para todos los clusters creados via PAM es el primero =&gt; <code>k</code> = 2.</p>
+
+<p>También podemos probar otra biblioteca para clusterizar maximizando el índice de Silhouette:</p>
+
+<pre><code class="r">library(NbClust)
+set.seed(1234)
+nc &lt;- NbClust(glx_2, min.nc = 2, max.nc = 10, method = &quot;kmeans&quot;, index = &quot;silhouette&quot;)
+nc$Best.nc
+</code></pre>
+
+<pre><code>## Number_clusters     Value_Index 
+##          2.0000          0.4659
+</code></pre>
+
+<p>Este método también sugiere usar <code>k</code> = 2.</p>
+
+<h2>Tarea 2</h2>
+
+<p>Cargamos el dataset entero (partimos de un .csv que fue creado a partir del dataset original descargado del website y parseado según las instrucciones para cada campo):</p>
+
+<pre><code class="r">glx &lt;- read.csv(&quot;dmcyt_tp2.csv&quot;, header = T, stringsAsFactors = F, sep = &#39;|&#39;)
+glx$mc_class &lt;- as.factor(glx$mc_class)
+
+# evitemos que R trunque decimales
+options(digits=16)
+</code></pre>
+
 <p>Quitamos outliers:</p>
 
 <pre><code class="r">glx_sin_outliers &lt;- subset(glx, apd_rmag &gt; -3.2)
@@ -224,25 +367,98 @@ nrow(glx) - nrow(glx_sin_outliers)
 
 <p>Buscamos datos faltantes:</p>
 
-<pre><code class="r">apply(glx_sin_outliers, 2, function(x) anyNA(x))
-</code></pre>
-
-<pre><code>##      seq      rah      ram      ras      de_      ded      dem      des 
-##    FALSE    FALSE    FALSE    FALSE    FALSE    FALSE    FALSE    FALSE 
-##        x        y     rmag   e_rmag  ap_rmag apd_rmag mc_class     mc_z 
-##    FALSE    FALSE    FALSE    FALSE    FALSE    FALSE    FALSE    FALSE 
-##    ujmag    bjmag    vjmag    usmag    gsmag    rsmag    ubmag    bbmag 
-##    FALSE    FALSE    FALSE    FALSE    FALSE    FALSE    FALSE    FALSE 
-##    vbmag  s280mag 
-##    FALSE     TRUE
-</code></pre>
-
 <pre><code class="r">glx_sin_faltantes &lt;- glx_sin_outliers[complete.cases(glx_sin_outliers),]
 nrow(glx_sin_outliers) - nrow(glx_sin_faltantes)
 </code></pre>
 
 <pre><code>## [1] 720
 </code></pre>
+
+<p>Dimensiones del dataset final:</p>
+
+<pre><code class="r">dim(glx_sin_faltantes)
+</code></pre>
+
+<pre><code>## [1] 54600    26
+</code></pre>
+
+<h2>Tarea 3</h2>
+
+<p>Extraemos las variables que tienen mediciones para poder encontrar clusters:</p>
+
+<pre><code class="r">glx_tarea3.0 &lt;- glx_sin_faltantes[,c(11,13,17,18,19)]
+</code></pre>
+
+<p>Ahora calculamos distancias para correr PAM y después Silhouette:</p>
+
+<pre><code class="r">glx_tarea3.1 &lt;- dist(scale(glx_tarea3.0))
+</code></pre>
+
+<pre><code>## Error in dist(scale(glx_tarea3.0)): negative length vectors are not allowed
+</code></pre>
+
+<p>Pinchó. ¿Por qué?</p>
+
+<p>Calcular la matriz de distancias implica que, por cada elemento de la matriz, hay que calcular la distancia a todos los demás elementos. Es decir, es un procedimiento cuadrático: si la matriz tiene <code>n</code> elementos, hay que almacenar <code>n x n</code> distancias.</p>
+
+<p>Se puede deducir, para el caso de la implementación de R, dónde está el problema de alocación de memoria:</p>
+
+<pre><code class="r"># tomamos las primeras 16000 filas
+glx_muestra_16k &lt;- glx_sin_faltantes[c(1:16000), c(11,13,17,18,19)]
+
+# intentamos calcular la matriz, y la imprimimos para forzarlo a que nos devuelve un mensaje de error
+dist(scale(glx_muestra_16k))
+</code></pre>
+
+<pre><code>## Error: cannot allocate vector of size 976.5 Mb
+</code></pre>
+
+<p>Por el mensaje de error, vemos que no puede alocar espacio (0.975 Gb). Entonces podemos despejar la cantidad de bytes que usa para guardar distancias:</p>
+
+<pre><code class="r">0.975 * (1024)^3 / (16000^2)
+</code></pre>
+
+<pre><code>## [1] 4.0894464
+</code></pre>
+
+<p>Son 4 bytes. Usando apenas 4 bytes para almacenar distancias, el cálculo para una matriz de tamaño modesto se vuelve demasiado costoso, rápidamente.</p>
+
+<p>Podemos probar de nuevo restringiendo el tamaño del dataset (y limpiando un poco con gc()).</p>
+
+<pre><code>##             used   (Mb) gc trigger   (Mb)  max used   (Mb)
+## Ncells    377229   10.1     750400   20.1    750400   20.1
+## Vcells 188798765 1440.5  394833792 3012.4 368817866 2813.9
+</code></pre>
+
+<p>Tomamos una muestra de 10000 objetos (en la compu donde corre esto, si tomamos más de 15000 pincha). Agrupamos con K-means buscando el <code>k</code> óptimo:</p>
+
+<pre><code class="r">filas_muestra &lt;- sample(nrow(glx_sin_faltantes), size = 10000)
+glx_muestra_10k &lt;- glx_sin_faltantes[filas_muestra,]
+glx_muestra_10k_mediciones &lt;- glx_muestra_10k[,c(11,13,17,18,19)]
+head(glx_muestra_10k_mediciones, 1)
+</code></pre>
+
+<pre><code>##         rmag ap_rmag  ujmag  bjmag  vjmag
+## 31278 24.193  24.278 -19.02 -18.93 -19.11
+</code></pre>
+
+<pre><code class="r">glx_muestra_10k_dist &lt;- dist(scale(glx_muestra_10k_mediciones))
+
+silhoutte_kmeans &lt;- function(k) {
+  c &lt;- kmeans(glx_muestra_10k_mediciones, centers = k)$cluster
+  s &lt;- silhouette(c, glx_muestra_10k_dist)
+  return(summary(s)$avg.width)
+}
+
+# aplicamos la función para valores de k entre 2 y 10
+indice_por_k_kmeans &lt;- sapply(c(2:20), silhoutte_kmeans)
+which.max(indice_por_k_kmeans)
+</code></pre>
+
+<pre><code>## [1] 2
+</code></pre>
+
+<p>Ahora obtenemos el segundo k, o sea <code>k</code> = 3.</p>
 
 </body>
 
